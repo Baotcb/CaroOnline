@@ -1,0 +1,83 @@
+﻿<Window x:Class="WpfApp1.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+         
+        xmlns:local="clr-namespace:WpfApp1"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="640" Width="760" Closing="Window_Closing"  >
+    <Grid >
+        <Grid x:Name="baseGrid" Background="White">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="290"/>
+            </Grid.ColumnDefinitions>
+            <ItemsControl ItemsSource="{Binding Maps, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Grid.Column="0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Click="Button_Click" Content="{Binding Content}" Width="30" Height="30" Background="{x:Null}"></Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel Grid.Column="1">
+                <Grid Background="LightGray">
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="1*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="{Binding IdUser, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontSize="20" x:Name="Id"/>
+                    <TextBlock Grid.Row="1" Text="{Binding Status, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" x:Name="Luot" FontSize="20"/>
+                    <TextBlock Grid.Row="2" Text="{Binding Desk, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontSize="20"/>
+                </Grid>
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center" >
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="30"/>
+                    </Grid.RowDefinitions>
+
+                    <ListBox Grid.Row="0" x:Name="ChatListBox" ItemsSource="{Binding ChatMessages}" Background="White" Foreground="Black" Height="300" Margin="0 50 0 10">
+                        <ListBox.ItemContainerStyle>
+                            <Style TargetType="ListBoxItem">
+                                <Setter Property="FontSize" Value="14" />
+                                <Setter Property="Foreground" Value="DarkGreen" />
+                                <Setter Property="FontStyle" Value="Italic" />
+                            </Style>
+                        </ListBox.ItemContainerStyle>
+                    </ListBox>
+
+                    <StackPanel Grid.Row="1" Orientation="Horizontal">
+                        <TextBox x:Name="ChatInputTextBox" Width="200" />
+                        <Button Content="Send" Click="Button_Click_2"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Grid>
+
+       
+        <Grid x:Name="overlayGrid" Background="White">
+            
+
+            <ItemsControl ItemsSource="{Binding Rooms, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Grid.Column="0">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Vertical"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Content="{Binding}" Click="Button_Click_1" Width="200" Height="150"></Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Grid>
+    </Grid>
+</Window>
