@@ -22,10 +22,13 @@ namespace WpfApp1
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         public OptionDetail.EStatus currentTurn;
+       
         public event PropertyChangedEventHandler PropertyChanged;
         ObservableCollection<OptionDetail> _Maps;
-        private ObservableCollection<string> _chatMessages;
-        public ObservableCollection<string> ChatMessages
+   
+
+        private ObservableCollection<ChatMessage> _chatMessages;
+        public ObservableCollection<ChatMessage> ChatMessages
         {
             get => _chatMessages;
             set
@@ -113,12 +116,26 @@ namespace WpfApp1
             connection.On<string>("CompetitorJoin", (x) =>
             {
                 string mess= "Player " + x + " join game";
-                MessageBox.Show(mess);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    ChatMessages.Add(new ChatMessage
+                    {
+                        Content = mess,
+                        Status = "None"
+                    });
+                });
             });
             connection.On<string>("LeaveGame", (x) =>
             {
                 string mess= "User " + x + " leave game";
-                MessageBox.Show(mess);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    ChatMessages.Add(new ChatMessage
+                    {
+                        Content = mess,
+                        Status = "None"
+                    });
+                });
             });
             connection.On<string>("GameFull", (x) =>
             {
@@ -138,13 +155,22 @@ namespace WpfApp1
             {
                 Rooms = new ObservableCollection<string>(x);
             });
-            connection.On<string>("ReceiveMess", (x) =>
+            connection.On<string, string>("ReceiveMess", (x, y) =>
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
-                    ChatMessages.Add(x);
+                    var status = Desk.Contains("X")
+                        ? (y == "X" ? "Red Right" : "Blue Left")
+                        : (y == "X" ? "Red Left" : "Blue Right");
+
+                    ChatMessages.Add(new ChatMessage
+                    {
+                        Content = x,
+                        Status = status
+                    });
                 });
             });
+
 
 
 
@@ -159,7 +185,7 @@ namespace WpfApp1
         {
             InitializeComponent();
             this.DataContext = this;
-            ChatMessages = new ObservableCollection<string>();
+            ChatMessages = new ObservableCollection<ChatMessage>();
             FirstLoad();
 
         }
@@ -184,13 +210,15 @@ namespace WpfApp1
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             var data = (sender as Button).DataContext as OptionDetail;
+           if (data.Content != "")
+            {
+                return;
+            }
             var index = Maps.IndexOf(data);
             Task.Run(async () =>
             {
-                await connection.SendAsync("Click", index,currentTurn);
+                await connection.SendAsync("Click", index, currentTurn);
             });
-
-
         }
       
 
@@ -406,7 +434,7 @@ namespace WpfApp1
             {
                 try
                 {
-                    await connection.SendAsync("SendMessage", ChatInputTextBox.Text);
+                    await connection.SendAsync("SendMessage", ChatInputTextBox.Text,_Desk);
                     ChatInputTextBox.Clear();
                 }
                 catch (Exception ex)
@@ -469,4 +497,28 @@ namespace WpfApp1
         }
 
     }
+    public class ChatMessage : INotifyPropertyChanged
+    {
+        private string _content;
+        private string _status;
+
+        public string Content
+        {
+            get => _content;
+            set { _content = value; OnPropertyChanged(); }
+        }
+
+        public string Status
+        {
+            get => _status;
+            set { _status = value; OnPropertyChanged(); }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
 }
