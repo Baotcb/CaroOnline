@@ -96,6 +96,26 @@ namespace WpfApp1
                 OnPropertyChanged();
             }
         }
+        int _xWin;
+        int _yWin;
+        public int XWin
+        {
+            get { return _xWin; }
+            set
+            {
+                _xWin = value;
+                OnPropertyChanged();
+            }
+        }
+        public int YWin
+        {
+            get { return _yWin; }
+            set
+            {
+                _yWin = value;
+                OnPropertyChanged();
+            }
+        }
         async void ConnectHub()
         {
              connection = new HubConnectionBuilder()
@@ -113,8 +133,12 @@ namespace WpfApp1
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     IdUser = "Player :" + x;
+                    ChatMessages = new ObservableCollection<ChatMessage>();
+                    Luot.Foreground = Status == "X" ? Brushes.Red : Brushes.Blue;
                     Panel.SetZIndex(overlayGrid, 0);
                     Panel.SetZIndex(baseGrid, 1);
+                    XWin = 0;
+                    YWin = 0;
                 });
             });
 
@@ -140,6 +164,9 @@ namespace WpfApp1
                         Content = mess,
                         Status = "None"
                     });
+                    ReloadMap();
+                    XWin = 0;
+                    YWin = 0;
                 });
             });
             connection.On<string>("GameFull", (x) =>
@@ -148,7 +175,12 @@ namespace WpfApp1
             });
             connection.On<string>("Notice", (x) =>
             {
-                Desk = x;
+               
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Desk = x;
+                    txtDesk.Foreground= Desk.Contains("X") ? Brushes.Red : Brushes.Blue;
+                });
             });
             connection.On<OptionDetail.EStatus>("ChangeTurn", (x) =>
             {
@@ -192,7 +224,6 @@ namespace WpfApp1
         {
             InitializeComponent();
             this.DataContext = this;
-            ChatMessages = new ObservableCollection<ChatMessage>();
             Rooms = new ObservableCollection<Room>();
             FirstLoad();
 
@@ -200,7 +231,6 @@ namespace WpfApp1
         void FirstLoad()
         {
             ReloadMap();
-            
             UpdateStatus();
             ConnectHub();
         }
@@ -212,7 +242,6 @@ namespace WpfApp1
                 Maps.Add(new OptionDetail() { status = OptionDetail.EStatus.None });
             }
             currentTurn = OptionDetail.EStatus.X;
-            
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -250,31 +279,35 @@ namespace WpfApp1
         //}
         private void UpdateStatus()
         {
-            Status = currentTurn == OptionDetail.EStatus.X ? "Lượt của X" : "Lượt của O";
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Status = currentTurn == OptionDetail.EStatus.X ? "X" : "O";
+                Luot.Foreground = Status == "X" ? Brushes.Red : Brushes.Blue;
+            });
         }
         private void CheckWinColumn(OptionDetail data)
         {
             var clickIndex = Maps.IndexOf(data);
 
-            //check column
+            // Check column
             int countLine = 1;
-            //check top
+            // Check top
             var topIndex = clickIndex;
             while (true)
             {
-                topIndex -= 10;
-                if (topIndex > 0)
+                topIndex -= 15;
+                if (topIndex >= 0)
                 {
                     if (Maps[topIndex].status == data.status) countLine++;
                     else break;
                 }
                 else break;
             }
-            //check bottom
+            // Check bottom
             var bottomIndex = clickIndex;
             while (true)
             {
-                bottomIndex += 10;
+                bottomIndex += 15;
                 if (bottomIndex < Maps.Count)
                 {
                     if (Maps[bottomIndex].status == data.status) countLine++;
@@ -284,14 +317,20 @@ namespace WpfApp1
             }
             if (countLine >= 5)
             {
-                var win = currentTurn == OptionDetail.EStatus.X ? "O" : "X";
+                var win = currentTurn == OptionDetail.EStatus.X ? "X" : "O";
                 MessageBox.Show(@$"{win} Win");
+                if (win == "X")
+                {
+                    XWin++;
+                }
+                else
+                {
+                    YWin++;
+                }
                 ReloadMap();
-
             }
-
-
         }
+
         private void CheckWinRow(OptionDetail data)
         {
             var clickIndex = Maps.IndexOf(data);
@@ -303,7 +342,7 @@ namespace WpfApp1
             while (true)
             {
                 leftIndex -= 1;
-                if (leftIndex % 10 != 9 && leftIndex >= 0)
+                if (leftIndex % 15 != 14 && leftIndex >= 0)
                 {
                     if (Maps[leftIndex].status == data.status) countLine++;
                     else break;
@@ -315,7 +354,7 @@ namespace WpfApp1
             while (true)
             {
                 rightIndex += 1;
-                if (rightIndex % 10 != 0 && rightIndex < Maps.Count)
+                if (rightIndex % 15 != 0 && rightIndex < Maps.Count)
                 {
                     if (Maps[rightIndex].status == data.status) countLine++;
                     else break;
@@ -324,11 +363,20 @@ namespace WpfApp1
             }
             if (countLine >= 5)
             {
-                var win = currentTurn == OptionDetail.EStatus.X ? "O" : "X";
+                var win = currentTurn == OptionDetail.EStatus.X ? "X" : "O";
                 MessageBox.Show(@$"{win} Win");
+                if (win == "X")
+                {
+                    XWin++;
+                }
+                else
+                {
+                    YWin++;
+                }
                 ReloadMap();
             }
         }
+
         private void CheckWinMainDiagonal(OptionDetail data)
         {
             var clickIndex = Maps.IndexOf(data);
@@ -339,8 +387,8 @@ namespace WpfApp1
             var topLeftIndex = clickIndex;
             while (true)
             {
-                topLeftIndex -= 11;
-                if (topLeftIndex % 10 != 9 && topLeftIndex >= 0)
+                topLeftIndex -= 16;
+                if (topLeftIndex % 15 != 14 && topLeftIndex >= 0)
                 {
                     if (Maps[topLeftIndex].status == data.status) countLine++;
                     else break;
@@ -351,8 +399,8 @@ namespace WpfApp1
             var bottomRightIndex = clickIndex;
             while (true)
             {
-                bottomRightIndex += 11;
-                if (bottomRightIndex % 10 != 0 && bottomRightIndex < Maps.Count)
+                bottomRightIndex += 16;
+                if (bottomRightIndex % 15 != 0 && bottomRightIndex < Maps.Count)
                 {
                     if (Maps[bottomRightIndex].status == data.status) countLine++;
                     else break;
@@ -361,11 +409,20 @@ namespace WpfApp1
             }
             if (countLine >= 5)
             {
-                var win = currentTurn == OptionDetail.EStatus.X ? "O" : "X";
+                var win = currentTurn == OptionDetail.EStatus.X ? "X" : "O";
                 MessageBox.Show(@$"{win} Win");
+                if (win == "X")
+                {
+                    XWin++;
+                }
+                else
+                {
+                    YWin++;
+                }
                 ReloadMap();
             }
         }
+
         private void CheckWinAntiDiagonal(OptionDetail data)
         {
             var clickIndex = Maps.IndexOf(data);
@@ -376,8 +433,8 @@ namespace WpfApp1
             var topRightIndex = clickIndex;
             while (true)
             {
-                topRightIndex -= 9;
-                if (topRightIndex % 10 != 0 && topRightIndex >= 0)
+                topRightIndex -= 14;
+                if (topRightIndex % 15 != 0 && topRightIndex >= 0)
                 {
                     if (Maps[topRightIndex].status == data.status) countLine++;
                     else break;
@@ -388,8 +445,8 @@ namespace WpfApp1
             var bottomLeftIndex = clickIndex;
             while (true)
             {
-                bottomLeftIndex += 9;
-                if (bottomLeftIndex % 10 != 9 && bottomLeftIndex < Maps.Count)
+                bottomLeftIndex += 14;
+                if (bottomLeftIndex % 15 != 14 && bottomLeftIndex < Maps.Count)
                 {
                     if (Maps[bottomLeftIndex].status == data.status) countLine++;
                     else break;
@@ -398,11 +455,20 @@ namespace WpfApp1
             }
             if (countLine >= 5)
             {
-                var win = currentTurn == OptionDetail.EStatus.X ? "O" : "X";
+                var win = currentTurn == OptionDetail.EStatus.X ? "X" : "O";
                 MessageBox.Show(@$"{win} Win");
+                if (win == "X")
+                {
+                    XWin++;
+                }
+                else
+                {
+                    YWin++;
+                }
                 ReloadMap();
             }
         }
+
 
 
 
