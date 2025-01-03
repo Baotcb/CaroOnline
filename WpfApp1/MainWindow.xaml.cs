@@ -46,8 +46,8 @@ namespace WpfApp1
                 OnPropertyChanged();
             }
         }
-        ObservableCollection<string> _Rooms;
-        public ObservableCollection<string> Rooms
+        ObservableCollection<Room> _Rooms;
+        public ObservableCollection<Room> Rooms
         {
             get => _Rooms;
             set
@@ -110,9 +110,14 @@ namespace WpfApp1
             });
             connection.On<string>("UserJoin", (x) =>
             {
-               IdUser ="Player :" + x;
-
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    IdUser = "Player :" + x;
+                    Panel.SetZIndex(overlayGrid, 0);
+                    Panel.SetZIndex(baseGrid, 1);
+                });
             });
+
             connection.On<string>("CompetitorJoin", (x) =>
             {
                 string mess= "Player " + x + " join game";
@@ -151,9 +156,15 @@ namespace WpfApp1
                 UpdateStatus();
 
             });
-            connection.On<List<String>>("Room", (x) =>
+            connection.On<List<Room>>("Room", (x) =>
             {
-                Rooms = new ObservableCollection<string>(x);
+                Rooms = new ObservableCollection<Room>(x);
+            });
+            connection.On("AutoDisConnect", () =>
+            {
+                MessageBox.Show("Auto Disconnected because competitor is disconnect");
+                Panel.SetZIndex(overlayGrid, 1);
+                Panel.SetZIndex(baseGrid, 0);
             });
             connection.On<string, string>("ReceiveMess", (x, y) =>
             {
@@ -171,10 +182,6 @@ namespace WpfApp1
                 });
             });
 
-
-
-
-
             await connection.StartAsync();
             //await connection.SendAsync("JoinGame");
             await connection.SendAsync("LoadRoom");
@@ -186,6 +193,7 @@ namespace WpfApp1
             InitializeComponent();
             this.DataContext = this;
             ChatMessages = new ObservableCollection<ChatMessage>();
+            Rooms = new ObservableCollection<Room>();
             FirstLoad();
 
         }
@@ -409,16 +417,27 @@ namespace WpfApp1
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            var data = (sender as Button).Content;
-            Task.Run(async () =>
+            var button = sender as Button;
+            if (button != null)
             {
-                await connection.SendAsync("JoinGame", data);
-            });
-            Panel.SetZIndex(overlayGrid, 0);
-            Panel.SetZIndex(baseGrid, 1);
+                var stackPanel = button.Content as StackPanel;
+                if (stackPanel != null)
+                {
+                    var txtRoomName = stackPanel.Children.OfType<TextBlock>().FirstOrDefault();
+                    if (txtRoomName != null)
+                    {
+                        string roomName = txtRoomName.Text;
+                        Task.Run(async () =>
+                        {
+                            await connection.SendAsync("JoinGame", roomName);
+                        });
+                    }
+                }
+            }
         }
 
-   
+
+
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
@@ -447,7 +466,24 @@ namespace WpfApp1
                 MessageBox.Show("Connection is not established.");
             }
         }
+        private async void CreateBtn_Click(object sender, RoutedEventArgs e)
+        {
+            string roomName = RoomNameTextBox.Text;
+            if (!string.IsNullOrEmpty(roomName))
+            {
+                RoomNameTextBox.Clear();
+                await connection.SendAsync("CreateRoom", roomName);
+            }
+            else
+            {
+                MessageBox.Show("Please enter a room name.");
+            }
+        }
 
+        private async void FindBtn_Click(object sender, RoutedEventArgs e)
+        {
+            await connection.SendAsync("Matchmake");
+        }
     }
 
     public class  OptionDetail: INotifyPropertyChanged
@@ -517,8 +553,34 @@ namespace WpfApp1
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+                handler(this, new PropertyChangedEventArgs(propertyName));
         }
     }
+    public class Room : INotifyPropertyChanged
+    {
+        protected string _roomName;
+        protected int _count;
+        public string RoomName
+        {
+            get => _roomName;
+            set { _roomName = value; OnPropertyChanged(); }
+        }
+        public int Count
+        {
+            get => _count;
+            set { _count = value; OnPropertyChanged(); }
+
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+                handler(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
 
 }
