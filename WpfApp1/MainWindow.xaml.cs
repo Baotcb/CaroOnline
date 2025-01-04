@@ -550,6 +550,17 @@ namespace WpfApp1
         {
             await connection.SendAsync("Matchmake");
         }
+
+        private void btnQuit_Click(object sender, RoutedEventArgs e)
+        {
+            Panel.SetZIndex(overlayGrid, 1);
+            Panel.SetZIndex(baseGrid, 0);
+            Task.Run(async () =>
+            {
+                await connection.SendAsync("Disconnect");
+            });
+
+        }
     }
 
     public class  OptionDetail: INotifyPropertyChanged

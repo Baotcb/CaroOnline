@@ -77,7 +77,7 @@
                                 </materialDesign:Card>
                             </StackPanel>
                         </materialDesign:Card>
-                        <Button HorizontalAlignment="Right" Width="100" Height="70" Background="WhiteSmoke" Margin="0 0 10 0" BorderBrush="{x:Null}">
+                        <Button HorizontalAlignment="Right" Width="100" Height="70" Background="WhiteSmoke" Margin="0 0 10 0" BorderBrush="{x:Null}" x:Name="btnQuit" Click="btnQuit_Click">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="ExitRun" Width="30" Height="30" HorizontalAlignment="Left" VerticalAlignment="Stretch" Foreground="Black"></materialDesign:PackIcon>
                                 <TextBlock Text="Quit" FontSize="20" Foreground="Black"></TextBlock>
@@ -180,7 +180,9 @@
                     </ItemsControl>
                 </materialDesign:Card>
                 <materialDesign:Card Grid.Row="2">
-                    <Button Content="Find matches" x:Name="FindBtn" Click="FindBtn_Click" Width="200" Height="50"></Button>
+                    <Button Content="Find matches" x:Name="FindBtn" Click="FindBtn_Click" Width="200" Height="50"/>
+
+
 
                 </materialDesign:Card>
             </Grid>
