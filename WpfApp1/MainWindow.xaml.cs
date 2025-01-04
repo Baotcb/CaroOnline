@@ -535,6 +535,11 @@ namespace WpfApp1
         private async void CreateBtn_Click(object sender, RoutedEventArgs e)
         {
             string roomName = RoomNameTextBox.Text;
+            if (Rooms.Where(p => p.RoomName== roomName).ToList().Count()== 1 )
+            {
+                MessageBox.Show("Room are exist , plese choose another name");
+                return;
+            }
             if (!string.IsNullOrEmpty(roomName))
             {
                 RoomNameTextBox.Clear();
